@@ -1,47 +1,95 @@
--- Handler for MQTT messages from ESP8266
--- This will respond to "hello world" messages with a blink command
+-- ESP8266 Response Process - Version 3
+-- Process ID: jDIsVeRE7-rW5fBvCMYB05e4mnQWXWw-lvtTAb-EG9w
+local json = require("json")
 
--- Initialize a variable to track last response time
-if not lastMessageTime then
-    lastMessageTime = 0
+-- Mother process ID
+local MOTHER_PROCESS_ID = "PQXER2h3iVQuB2GgDrElFh70Rbvli_ndRRWMkLooR7M"
+
+-- Initialize state
+if not ao.state then
+  ao.state = {
+    messageCount = 0,
+    lastResponse = ""
+  }
+end
+
+-- Debug helper function to print all message details
+function printMessage(msg)
+  print("=== MESSAGE DETAILS ===")
+  print("ID: " .. (msg.Id or "none"))
+  print("Owner: " .. (msg.Owner or "none"))
+  print("Target: " .. (msg.Target or "none"))
+  print("Data: " .. (msg.Data or "none"))
+  
+  print("Tags:")
+  if msg.Tags then
+    for name, value in pairs(msg.Tags) do
+      print("  " .. name .. ": " .. value)
+    end
+  else
+    print("  No tags")
   end
   
-  -- Handler for MQTT messages with "Message-From-MQTT" action
-  Handlers.add(
-    "MQTT-Handler",
-    { Action = "Message-From-MQTT" },
-    function (msg)
-      -- Log the incoming message
-      print("Received message from MQTT: " .. msg.Data)
-      
-      -- Check if the message is "hello world"
-      if msg.Data == "hello world" then
-        -- Get current time to prevent duplicate responses in quick succession
-        local currentTime = os.time()
-        
-        -- Only respond if at least 10 seconds since last response
-        if currentTime - lastMessageTime > 10 then
-          lastMessageTime = currentTime
-          
-          -- Create response JSON with the blink command
-          print("Sending blink command response")
-          return {
-            Output = '{"sub-id": "command/blink", "data": "blink"}'
-          }
-        else
-          print("Ignoring duplicate message (received within 10 seconds)")
-          return {
-            Output = "Duplicate request ignored"
-          }
-        end
-      else
-        -- For any other message content, just echo it back
-        return {
-          Output = "Echo: " .. msg.Data
-        }
+  print("Action: " .. (msg.Action or "none"))
+  print("======================")
+end
+
+-- Handle ANY message, then inspect it
+Handlers.add(
+  "Message-Inspector",
+  function(msg)
+    printMessage(msg) -- Print all message details for debugging
+    return true
+  end,
+  function(msg)
+    ao.state.messageCount = ao.state.messageCount + 1
+    print("Message #" .. ao.state.messageCount .. " received")
+    
+    -- Try to get the response topic from the message
+    local responseTopic = nil
+    
+    -- Check in Tags first
+    if msg.Tags and msg.Tags["Response-Topic"] then
+      responseTopic = msg.Tags["Response-Topic"]
+      print("Found Response-Topic in Tags: " .. responseTopic)
+    end
+    
+    -- If we don't have a response topic yet, try to extract from the Data
+    if not responseTopic and msg.Data then
+      -- Try to parse the data as JSON
+      local success, data = pcall(json.decode, msg.Data)
+      if success and data["where-to-find-me"] then
+        responseTopic = data["where-to-find-me"]
+        print("Found where-to-find-me in Data JSON: " .. responseTopic)
       end
     end
-  )
-  
-  -- Log that the handler was successfully loaded
-  print("MQTT handler loaded successfully!")
+    
+    -- If we found a response topic, send a ping
+    if responseTopic then
+      print("Sending ping to: " .. responseTopic)
+      
+      local pingData = json.encode({
+        topic = responseTopic,
+        message = "ping"
+      })
+      
+      print("Ping data: " .. pingData)
+      
+      -- Send the ping through the mother process
+      ao.send({
+        Target = MOTHER_PROCESS_ID,
+        Action = "Send-To-IoT",
+        Data = pingData
+      })
+      
+      ao.state.lastResponse = "Sent ping to " .. responseTopic
+      return "Sent ping to " .. responseTopic
+    else
+      print("No response topic found in message")
+      ao.state.lastResponse = "No response topic found"
+      return "No response topic found"
+    end
+  end
+)
+
+print("ESP8266 Process initialized! Mother Process ID: " .. MOTHER_PROCESS_ID)

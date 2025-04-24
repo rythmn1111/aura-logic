@@ -14,7 +14,7 @@ const char* mqtt_subscribe_topic = "iot/response/esp8266";  // Topic to receive 
 const char* mqtt_client_id = "ESP8266_IoT_Client";
 
 // AO process addresses to send messages to (comma-separated)
-const char* ao_processes = "jDIsVeRE7-rW5fBvCMYB05e4mnQWXWw-lvtTAb-EG9w";  // Replace with your target process IDs
+const char* ao_processes = "R4kuVTN7y-HaHHV19SzlwCQjqPoDteSzJjaTCiJ11jM";  // Replace with your target process IDs
 
 // LED pin for visual feedback
 const int ledPin = 2;  // GPIO2 is often the built-in LED on ESP8266

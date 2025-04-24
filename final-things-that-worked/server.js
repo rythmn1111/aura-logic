@@ -61,7 +61,7 @@ async function sendToMotherProcess(iotData) {
     
     console.log('Message sent to mother process successfully:', messageResult);
     
-    // Wait for response
+    // Wait for               response
     setTimeout(async () => {
       try {
         const processResult = await result({
