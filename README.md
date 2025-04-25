@@ -1,6 +1,3 @@
-Understood. Here's **ONE SINGLE `README.md` FILE** with **EVERYTHING** — description, features, setup, step-by-step usage, full bidirectional example, AO process template, and credits. **No gaps. No missing parts. Just a complete README.**
-
----
 
 ```markdown
 # 🌐 AURA – IoT ↔ AO Routing Framework
