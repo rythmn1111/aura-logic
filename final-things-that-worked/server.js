@@ -10,7 +10,7 @@ const app = express();
 const MQTT_BROKER = '57.128.58.120';
 const MQTT_PORT = 1883;
 const MQTT_SUBSCRIBE_TOPIC = 'root/main';
-const MOTHER_PROCESS_ID = 'PQXER2h3iVQuB2GgDrElFh70Rbvli_ndRRWMkLooR7M';
+const MOTHER_PROCESS_ID = 'Pi01pNr1G_p4i0YSYLjl_cgFdrmv4nZolezwxmMffSE';
 const WALLET_PATH = './wallet.json';
 
 // Check if wallet exists
